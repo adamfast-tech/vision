@@ -1,0 +1,20 @@
+{
+  "name": "Vision",
+  "short_name": "Vision",
+  "description": "Tes films, séries et animes stockés sur Google Drive, MEGA ou un NAS, lancés en un clic sur la télé, l’ordinateur et le téléphone.",
+  "lang": "fr",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#061014",
+  "theme_color": "#061014",
+  "categories": ["entertainment", "video"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

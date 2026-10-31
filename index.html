@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vision</title>
+<meta name="description" content="Tes films, séries et animes stockés sur Google Drive, MEGA ou un NAS, lancés en un clic sur la télé, l’ordinateur et le téléphone.">
+<meta name="theme-color" content="#061014">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vision">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/big-shoulders-display-latin-wght-normal.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2" crossorigin>
+<script>
+(function () {
+  var d = document.documentElement, s = {};
+  d.className += ' js fx';
+  try { s = JSON.parse(localStorage.getItem('vision:settings') || '{}') || {}; } catch (e) { s = {}; }
+  var ua = navigator.userAgent;
+  var tv = /SMART-?TV|SmartTV|SMART_TV|Tizen|Web0S|WebOS|NetCast|BRAVIA|\bAFT[A-Z]|AFTB|Android TV|GoogleTV|CrKey|HbbTV|VIDAA|Hisense|Roku|PhilipsTV|Viera|Opera TV|AppleTV|Xbox|PlayStation|SmartHub/i.test(ua);
+  var mm = function (q) { return window.matchMedia ? matchMedia(q).matches : false; };
+  var auto = tv ? 'tv' : (mm('(pointer: coarse)') && !mm('(hover: hover)') ? (Math.min(screen.width, screen.height) >= 700 ? 'tablet' : 'mobile') : (innerWidth < 640 ? 'mobile' : 'desktop'));
+  var dev = s.device && s.device !== 'auto' ? s.device : auto;
+  d.setAttribute('data-device', dev);
+  d.setAttribute('data-layout', dev === 'mobile' || (dev === 'tablet' && innerWidth < 900) || (dev !== 'tv' && innerWidth < 760) ? 'bar' : 'rail');
+  d.setAttribute('data-input', tv ? 'key' : 'pointer');
+  var reduce = s.motion === 'reduced' || (s.motion !== 'full' && mm('(prefers-reduced-motion: reduce)'));
+  d.setAttribute('data-anim', reduce ? 'reduced' : (dev === 'tv' ? 'light' : 'full'));
+})();
+</script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="lib/anim.css">
+<link rel="stylesheet" href="lib/anim-fx.css">
+<link rel="stylesheet" href="lib/brio.css">
+<link rel="stylesheet" href="lib/noctis.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/player.css">
+<link rel="stylesheet" href="css/tv.css">
+<script src="vendor/anime.umd.min.js" defer></script>
+<script src="lib/anim.js" defer></script>
+<script src="lib/anim-fx.js" defer></script>
+<script src="lib/anim-pixi.js" defer data-pixi-src="https://cdn.jsdelivr.net/npm/pixi.js@8.22.0/dist/pixi.min.js"></script>
+<script src="lib/brio.js" defer></script>
+<script src="lib/noctis.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.5l8.5 7.1"/><path d="M5.5 9.3V19.5a1 1 0 0 0 1 1h3.8v-5.6h3.4v5.6h3.8a1 1 0 0 0 1-1V9.3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m20 20-4.6-4.6"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.2"/><path d="M7.5 4v16M16.5 4v16M3 8.5h4.5M3 15.5h4.5M16.5 8.5H21M16.5 15.5H21"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.2"/><path d="M6 4.6h12M8 2.2h8"/></symbol>
+    <symbol id="i-anime" viewBox="0 0 24 24"><path d="M10.5 3.5c.8 3.9 2.2 5.3 6.1 6.1-3.9.8-5.3 2.2-6.1 6.1-.8-3.9-2.2-5.3-6.1-6.1 3.9-.8 5.3-2.2 6.1-6.1Z"/><path d="M17.8 14.6c.4 1.8 1 2.4 2.7 2.7-1.7.4-2.3 1-2.7 2.7-.4-1.7-1-2.3-2.7-2.7 1.7-.3 2.3-.9 2.7-2.7Z"/></symbol>
+    <symbol id="i-other" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 8.8v6.4l5.2-3.2Z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1Z"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.2 18.5a4.4 4.4 0 0 1-.6-8.8 6 6 0 0 1 11.6 1.6 3.6 3.6 0 0 1-.6 7.2Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9M12 14.5v2"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="7" rx="1.8"/><rect x="3.5" y="13" width="17" height="7" rx="1.8"/><path d="M7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.2 13.8a4.3 4.3 0 0 0 6.1 0l3.1-3.1a4.3 4.3 0 0 0-6.1-6.1l-1.1 1.1"/><path d="M13.8 10.2a4.3 4.3 0 0 0-6.1 0l-3.1 3.1a4.3 4.3 0 0 0 6.1 6.1l1.1-1.1"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3c1 4.8 2.7 6.5 7.5 7.5-4.8 1-6.5 2.7-7.5 7.5-1-4.8-2.7-6.5-7.5-7.5C9.3 9.5 11 7.8 12 3Z"/></symbol>
+    <symbol id="i-demo" viewBox="0 0 24 24"><path d="M4 9.5h16v9.3a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 18.8Z"/><path d="m4 9.5 1.3-4.3 14.6 2.4-.7 1.9"/><path d="m9.4 5.8 1.9 3.3M14.6 6.6l1.8 3"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.4"/><path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.4 5.4l2.1 2.1M16.5 16.5l2.1 2.1M5.4 18.6l2.1-2.1M16.5 7.5l2.1-2.1"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.6v14.8a.9.9 0 0 0 1.4.8l11.6-7.4a.9.9 0 0 0 0-1.6L8.9 3.8a.9.9 0 0 0-1.4.8Z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1.1" fill="currentColor" stroke="none"/><rect x="14" y="4.5" width="4" height="15" rx="1.1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19.5 12h-15M10.5 6l-6 6 6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v5.6M12 7.6h.01"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.6 4.4 4.4L19 7.4"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.6 10.5a7.8 7.8 0 0 0-14.1-3.4L4 9M4 4.5V9h4.5"/><path d="M4.4 13.5a7.8 7.8 0 0 0 14.1 3.4L20 15M20 19.5V15h-4.5"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></symbol>
+    <symbol id="i-rewind10" viewBox="0 0 24 24"><path d="M4.6 12.4A7.6 7.6 0 1 0 7 6.6"/><path d="M3.9 3.2v4.4h4.4"/><text x="12.6" y="15.6" text-anchor="middle" font-size="7.4" font-weight="700" fill="currentColor" stroke="none">10</text></symbol>
+    <symbol id="i-forward10" viewBox="0 0 24 24"><path d="M19.4 12.4A7.6 7.6 0 1 1 17 6.6"/><path d="M20.1 3.2v4.4h-4.4"/><text x="11.4" y="15.6" text-anchor="middle" font-size="7.4" font-weight="700" fill="currentColor" stroke="none">10</text></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.4h3.4L12 5.6v12.8l-4.6-3.8H4Z"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.4h3.4L12 5.6v12.8l-4.6-3.8H4Z"/><path d="m16 9.6 4.8 4.8M20.8 9.6 16 14.4"/></symbol>
+    <symbol id="i-cc" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.6"/><path d="M10.4 10.3a2.2 2.2 0 1 0 0 3.4M16.6 10.3a2.2 2.2 0 1 0 0 3.4"/></symbol>
+    <symbol id="i-speed" viewBox="0 0 24 24"><path d="M4.4 17.2a8.6 8.6 0 1 1 15.2 0"/><path d="m12 13.4 4-4.2"/><circle cx="12" cy="13.6" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5.5 5.6v12.8a.8.8 0 0 0 1.2.7l9.6-6.4a.8.8 0 0 0 0-1.4L6.7 4.9a.8.8 0 0 0-1.2.7Z" fill="currentColor" stroke="none"/><path d="M19 5.5v13"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M18.5 5.6v12.8a.8.8 0 0 1-1.2.7l-9.6-6.4a.8.8 0 0 1 0-1.4l9.6-6.4a.8.8 0 0 1 1.2.7Z" fill="currentColor" stroke="none"/><path d="M5 5.5v13"/></symbol>
+    <symbol id="i-pip" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.2"/><rect x="12" y="11.4" width="6.6" height="5.2" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-cast" viewBox="0 0 24 24"><path d="M3 17.6a3.4 3.4 0 0 1 3.4 3.4M3 13.8A7.2 7.2 0 0 1 10.2 21M3 10a11 11 0 0 1 11 11"/><path d="M6 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2.6"/></symbol>
+    <symbol id="i-airplay" viewBox="0 0 24 24"><path d="M6.6 17H5.2A2.2 2.2 0 0 1 3 14.8V6.2A2.2 2.2 0 0 1 5.2 4h13.6A2.2 2.2 0 0 1 21 6.2v8.6a2.2 2.2 0 0 1-2.2 2.2h-1.4"/><path d="m12 13.6 5 6.4H7Z"/></symbol>
+    <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M4 9V5.2C4 4.5 4.5 4 5.2 4H9M15 4h3.8c.7 0 1.2.5 1.2 1.2V9M20 15v3.8c0 .7-.5 1.2-1.2 1.2H15M9 20H5.2c-.7 0-1.2-.5-1.2-1.2V15"/></symbol>
+    <symbol id="i-fullscreen-exit" viewBox="0 0 24 24"><path d="M9 4v3.8C9 8.5 8.5 9 7.8 9H4M20 9h-3.8C15.5 9 15 8.5 15 7.8V4M15 20v-3.8c0-.7.5-1.2 1.2-1.2H20M4 15h3.8c.7 0 1.2.5 1.2 1.2V20"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.6 8.6"/><path d="M18 13.6v5.2c0 .7-.5 1.2-1.2 1.2H5.2c-.7 0-1.2-.5-1.2-1.2V7.2C4 6.5 4.5 6 5.2 6h5.2"/></symbol>
+    <symbol id="i-tvpair" viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="12" rx="2.2"/><path d="M8.5 21.5h7M9.2 3l2.8 3.3L14.8 3"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7.2h3.2a4 4 0 0 1 3.3 1.8l4.9 7a4 4 0 0 0 3.3 1.8H21M3 16.8h3.2a4 4 0 0 0 3.3-1.8l.4-.6M14 9.6l.4-.6a4 4 0 0 1 3.3-1.8H21M18.4 4.6 21 7.2l-2.6 2.6M18.4 14.2l2.6 2.6-2.6 2.6"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.6 11.2a6.4 6.4 0 0 0 12.8 0M12 17.6V21"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.2 10.6 12 15.4l4.8-4.8M5 20h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 20V9M7.2 13.4 12 8.6l4.8 4.8M5 4h14"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.8 12.2A8.2 8.2 0 1 0 6.2 6.3L3.8 8.6"/><path d="M3.8 4.2v4.4h4.4M12 7.6V12l3 2"/></symbol>
+  </defs>
+</svg>
+
+<div id="splash" aria-hidden="true">
+  <svg class="splash-mark" viewBox="0 0 24 24"><g class="ap-ring"><circle class="ap-blade" cx="12" cy="12" r="9"/><path class="ap-blade" d="M16.33 11.24L12.79 20.97"/><path class="ap-blade" d="M14.83 15.37L4.63 17.17"/><path class="ap-blade" d="M10.5 16.13L3.84 8.2"/><path class="ap-blade" d="M7.67 12.76L11.21 3.03"/><path class="ap-blade" d="M9.17 8.63L19.37 6.83"/><path class="ap-blade" d="M13.5 7.87L20.16 15.8"/></g></svg>
+  <p class="splash-word">Vision</p>
+</div>
+<script>
+(function () {
+  var hide = false;
+  try { hide = !!sessionStorage.getItem('vision-splash') || (JSON.parse(localStorage.getItem('vision:settings') || '{}') || {}).splash === false; } catch (e) { hide = false; }
+  if (hide) { var sp = document.getElementById('splash'); if (sp) sp.parentNode.removeChild(sp); }
+})();
+</script>
+
+<div id="app">
+  <a class="skip" href="#view">Aller au contenu</a>
+  <nav class="rail-nav" aria-label="Navigation principale">
+    <a class="brand" href="#/" aria-label="Vision, accueil">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M16.33 11.24L12.79 20.97M14.83 15.37L4.63 17.17M10.5 16.13L3.84 8.2M7.67 12.76L11.21 3.03M9.17 8.63L19.37 6.83M13.5 7.87L20.16 15.8"/></svg>
+      <span class="brand-word">Vision</span>
+    </a>
+    <span id="scan-ind" class="scan-ind" hidden title="Synchronisation en cours"><span data-brio="egaliseur" data-taille="22" data-label="Synchronisation en cours"></span></span>
+    <ul class="nav-list">
+      <li><a href="#/" data-nav-id="home"><svg class="i"><use href="#i-home"/></svg><span>Accueil</span></a></li>
+      <li><a href="#/recherche" data-nav-id="search"><svg class="i"><use href="#i-search"/></svg><span>Recherche</span></a></li>
+      <li><a href="#/films" data-nav-id="film"><svg class="i"><use href="#i-film"/></svg><span>Films</span></a></li>
+      <li><a href="#/series" data-nav-id="serie"><svg class="i"><use href="#i-tv"/></svg><span>Séries</span></a></li>
+      <li><a href="#/animes" data-nav-id="anime"><svg class="i"><use href="#i-anime"/></svg><span>Animes</span></a></li>
+      <li><a href="#/autres" data-nav-id="autre"><svg class="i"><use href="#i-other"/></svg><span>Autres vidéos</span></a></li>
+      <li><a href="#/liste" data-nav-id="liste"><svg class="i"><use href="#i-list"/></svg><span>Ma liste</span></a></li>
+    </ul>
+    <ul class="nav-list nav-foot">
+      <li><a href="#/sources" data-nav-id="sources"><svg class="i"><use href="#i-cloud"/></svg><span>Stockages</span></a></li>
+      <li><a href="#/reglages" data-nav-id="settings"><svg class="i"><use href="#i-settings"/></svg><span>Réglages</span></a></li>
+    </ul>
+  </nav>
+
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="Vision, accueil">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M16.33 11.24L12.79 20.97M14.83 15.37L4.63 17.17M10.5 16.13L3.84 8.2M7.67 12.76L11.21 3.03M9.17 8.63L19.37 6.83M13.5 7.87L20.16 15.8"/></svg>
+      <span class="brand-word">Vision</span>
+    </a>
+    <div class="topbar-actions">
+      <a class="icon-btn" href="#/recherche" aria-label="Recherche" data-nav-id="search"><svg class="i"><use href="#i-search"/></svg></a>
+      <a class="icon-btn" href="#/sources" aria-label="Stockages" data-nav-id="sources"><svg class="i"><use href="#i-cloud"/></svg></a>
+      <a class="icon-btn" href="#/reglages" aria-label="Réglages" data-nav-id="settings"><svg class="i"><use href="#i-settings"/></svg></a>
+    </div>
+  </header>
+
+  <main id="app-main">
+    <div id="view" tabindex="-1"></div>
+  </main>
+
+  <nav class="tabbar" aria-label="Navigation">
+    <a href="#/" data-nav-id="home"><svg class="i"><use href="#i-home"/></svg><span>Accueil</span></a>
+    <a href="#/films" data-nav-id="film"><svg class="i"><use href="#i-film"/></svg><span>Films</span></a>
+    <a href="#/series" data-nav-id="serie"><svg class="i"><use href="#i-tv"/></svg><span>Séries</span></a>
+    <a href="#/animes" data-nav-id="anime"><svg class="i"><use href="#i-anime"/></svg><span>Animes</span></a>
+    <a href="#/liste" data-nav-id="liste"><svg class="i"><use href="#i-list"/></svg><span>Ma liste</span></a>
+  </nav>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+<div id="player-root"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<noscript><div class="noscript">Vision a besoin de JavaScript pour lire tes vidéos.</div></noscript>
+<script nomodule>
+  document.getElementById('view').innerHTML = '<section class="empty"><h1 class="page-title">Navigateur trop ancien</h1><p class="muted">Ce navigateur ne prend pas en charge Vision. Sur la télé, mets à jour le navigateur ou utilise un boîtier Android TV, un Chromecast ou une console récente.</p></section>';
+  var sp = document.getElementById('splash'); if (sp) sp.parentNode.removeChild(sp);
+</script>
+</body>
+</html>

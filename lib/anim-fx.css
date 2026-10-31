@@ -1,0 +1,37 @@
+/* anim-fx.css — styles des extensions anime.js / PixiJS du kit. Code original, libre d'usage, aucune mention requise. */
+
+/* Filet de sécurité : si un script ne charge pas, le contenu réapparaît seul après 2 s. */
+@keyframes fx-failsafe { to { opacity: 1; visibility: visible; } }
+.fx [data-lines]:not(.fx-ready),
+.fx [data-draw]:not(.fx-ready) { opacity: 0; animation: fx-failsafe 0s 2s forwards; }
+
+/* Lignes masquées : data-lines */
+[data-lines] .fx-line { display: block; }
+
+/* Objet qui suit un tracé SVG : data-motion="#trace" (dans un parent position:relative qui contient le SVG en haut à gauche) */
+[data-motion] { position: absolute; left: 0; top: 0; translate: -50% -50%; will-change: transform; }
+
+/* Défilement horizontal épinglé : section[data-hscroll] > .hs-sticky > .hs-track */
+[data-hscroll] { position: relative; }
+.hs-sticky { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.hs-track { display: flex; gap: var(--hs-gap, 24px); width: max-content; padding-inline: var(--hs-pad, 5vw); }
+.hs-track > * { scroll-snap-align: start; flex: none; }
+.hs-on .hs-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; align-items: center; scroll-snap-type: none; }
+.hs-on .hs-track { will-change: transform; }
+
+/* Filtre animé : [data-filter-bar] > button[data-filter] ; [data-filter-grid] > [data-tags] */
+[data-filter-grid] [hidden] { display: none !important; }
+
+/* Grille à onde : [data-wave] > span*N */
+[data-wave] { cursor: pointer; }
+[data-wave] > * { will-change: transform; }
+
+/* Canvas PixiJS : [data-pixi] (parent position:relative ; repli = contenu HTML d'origine) */
+[data-pixi] { position: relative; overflow: hidden; isolation: isolate; }
+[data-pixi] > canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; pointer-events: none; z-index: -1; }
+[data-pixi="water"] > canvas { z-index: 0; }
+[data-pixi="water"].pixi-on > img { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx [data-lines]:not(.fx-ready), .fx [data-draw]:not(.fx-ready) { opacity: 1; animation: none; }
+}

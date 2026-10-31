@@ -1,0 +1,70 @@
+/* Vision — mode Télé (10 pieds) : tout s'agrandit avec l'écran, la sélection s'éclaire comme sous un projecteur,
+   pas d'effets coûteux (flou d'arrière-plan, grain, inclinaison) pour rester fluide sur les processeurs de télé. */
+html[data-device="tv"] { font-size: 16px; font-size: 1.25vw; --pad: 4.2vw; --nav-w: 5.6rem; --card-w: 15.5rem; --grid-min: 14rem; scroll-behavior: auto; }
+html[data-device="tv"] body { overflow-x: hidden; }
+html[data-device="tv"] .rail-nav { padding: 2.2rem 1rem; }
+html[data-device="tv"] .rail-nav:focus-within { width: 18rem; }
+html[data-device="tv"] .nav-list a { height: 3.1rem; font-size: 1.05rem; }
+html[data-device="tv"] .nav-list a:focus { background: var(--craie); color: var(--nuit); box-shadow: none; }
+html[data-device="tv"] .nav-list a[aria-current="page"]::before { left: -1rem; }
+html[data-device="tv"] .scan-ind { top: 5.2rem; left: 2rem; }
+
+/* Héros fixe en haut : l'aperçu suit la carte sélectionnée, les rangées défilent dessous. */
+html[data-device="tv"] .hero { position: -webkit-sticky; position: sticky; top: 0; height: 58vh; min-height: 0; padding: 0 var(--pad) 4.5vh; }
+html[data-device="tv"] .hero-title { font-size: 4.6rem; -webkit-line-clamp: 2; }
+html[data-device="tv"] .hero-desc { -webkit-line-clamp: 2; font-size: 1.05rem; max-width: 52ch; }
+html[data-device="tv"] .hero-actions { margin-top: 1.2rem; }
+html[data-device="tv"] .hero-dots { display: none; }
+html[data-device="tv"] .hero-shade { background:
+    linear-gradient(90deg, rgba(6, 16, 20, .96) 0%, rgba(6, 16, 20, .78) 32%, rgba(6, 16, 20, .2) 62%, rgba(6, 16, 20, 0) 78%),
+    linear-gradient(0deg, var(--nuit) 0%, rgba(6, 16, 20, .7) 14%, rgba(6, 16, 20, 0) 40%); }
+html[data-device="tv"] .rails { margin-top: 0; padding-bottom: 46vh; z-index: 1; }
+html[data-device="tv"] .rail { scroll-margin-top: 58vh; margin-bottom: .6rem; }
+html[data-device="tv"] .rail-track { padding-top: 1.1rem; padding-bottom: 1.3rem; }
+html[data-device="tv"] .rail-track > .card-wrap { margin-right: 1.1rem; }
+
+/* La sélection : halo ambre franc, carte agrandie, le reste reste net mais calme. */
+html[data-device="tv"] { --glow: 0 0 0 .2rem var(--ambre), 0 0 0 .55rem rgba(255, 179, 71, .25), 0 1.4rem 3rem -.8rem rgba(255, 138, 61, .7); }
+html[data-device="tv"] .card:focus .card-media { transform: scale(1.08); }
+html[data-device="tv"] .card .card-play { display: none; }
+html[data-device="tv"] .card:focus .card-title { color: #fff; }
+html[data-device="tv"] .card-title { font-size: 1.02rem; }
+html[data-device="tv"] .card-sub { font-size: .88rem; }
+html[data-device="tv"] .btn { height: 3.1rem; font-size: 1.1rem; border-radius: .9rem; }
+html[data-device="tv"] .btn-play.nx-lustre { height: 3.3rem; font-size: 1.15rem; }
+html[data-device="tv"] .btn:focus, html[data-device="tv"] .nx:focus { transform: scale(1.06); }
+html[data-device="tv"] .icon-btn { width: 3.1rem; height: 3.1rem; }
+html[data-device="tv"] .seg-btn { height: 2.6rem; font-size: 1rem; }
+html[data-device="tv"] .seg-btn:focus { background: var(--craie); color: var(--nuit); box-shadow: 0 0 0 .2rem var(--ambre); }
+html[data-device="tv"] .ep { grid-template-columns: 4rem 15rem minmax(0, 1fr) auto; }
+html[data-device="tv"] .ep:focus { transform: scale(1.01); }
+html[data-device="tv"] .page-head { padding-top: 3.2rem; }
+html[data-device="tv"] .toast { font-size: 1.1rem; padding: 1rem 1.2rem; }
+
+/* Lecteur à la télécommande */
+html[data-device="tv"] .pl-btn { width: 3.6rem; height: 3.6rem; }
+html[data-device="tv"] .pl-btn:focus { background: #fff; color: #000; transform: scale(1.1); }
+html[data-device="tv"] .pl-mi { height: 3.2rem; font-size: 1.1rem; }
+html[data-device="tv"] .pl-title { font-size: 2.6rem; }
+html[data-device="tv"] .pl-scrub { height: 2.2rem; }
+html[data-device="tv"] .pl-rail { height: .45rem; }
+html[data-device="tv"] .pl-scrub:focus .pl-rail { height: .7rem; }
+html[data-device="tv"] .pl-time { font-size: 1.2rem; }
+html[data-device="tv"] .pl-video::cue { font-size: 1.15em; }
+
+/* Économies : pas de flou ni d'effets lourds */
+html[data-device="tv"] .tabbar, html[data-device="tv"] .btn-glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-device="tv"] .beam { opacity: .8; }
+html[data-device="tv"] .gen-cover::after { display: none; }
+html[data-device="tv"] [data-tilt] { transform: none !important; }
+html[data-device="tv"] .hero-layer.is-on > img, html[data-device="tv"] .hero-layer.is-on > .gen-cover { animation: none; }
+
+/* Boutons Noctis et Brio (dimensionnés en px) : à l'échelle de la télé */
+html[data-device="tv"] .nx { --nx-h: 3.1rem; font-size: 1rem; }
+html[data-device="tv"] .btn-list.nx-pilule-enregistrer.nx-icone { height: 3.1rem; padding: 0 1.2rem 0 1rem; font-size: 1.05rem; }
+html[data-device="tv"] .btn-sync.nx, html[data-device="tv"] .btn-del.nx { height: 2.6rem; font-size: .95rem; }
+html[data-device="tv"] .toggle { font-size: 1.05rem; }
+html[data-device="tv"] .pair-qr { width: 15rem; }
+html[data-device="tv"] .br-it-interrupteur-rebond { zoom: 1.45; }
+html[data-device="tv"] .hero::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 6vh; background: linear-gradient(180deg, var(--nuit), rgba(6, 16, 20, 0)); pointer-events: none; }
+html[data-device="tv"] .rail { scroll-margin-top: 61vh; }
