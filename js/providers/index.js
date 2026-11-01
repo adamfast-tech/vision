@@ -4,6 +4,11 @@ import * as mega from './mega.js';
 import * as http from './http.js';
 import * as links from './links.js';
 import * as demo from './demo.js';
+import * as webdav from './webdav.js';
+import * as s3 from './s3.js';
+import * as dropbox from './dropbox.js';
+import * as onedrive from './onedrive.js';
+import * as pcloud from './pcloud.js';
 import { state, getSource } from '../core/store.js';
 import { ext } from '../core/util.js';
 import { HARD_EXT } from '../library/parse.js';
@@ -11,6 +16,11 @@ import { HARD_EXT } from '../library/parse.js';
 export var PROVIDERS = {
   gdrive: { mod: gdrive, label: 'Google Drive', icon: 'cloud', blurb: 'Un dossier partagé par lien, ou ton Drive privé via ta connexion Google.' },
   mega: { mod: mega, label: 'MEGA', icon: 'lock', blurb: 'Un lien public de dossier ou de fichier, clé de déchiffrement comprise.' },
+  dropbox: { mod: dropbox, label: 'Dropbox', icon: 'box', blurb: 'Ton Dropbox, dossier privé, via une connexion Dropbox.' },
+  onedrive: { mod: onedrive, label: 'OneDrive', icon: 'cloud', blurb: 'Ton OneDrive (perso ou pro), ou un lien de dossier partagé, via une connexion Microsoft.' },
+  pcloud: { mod: pcloud, label: 'pCloud', icon: 'link', blurb: 'Un lien public de dossier pCloud, sans compte ni clé.' },
+  webdav: { mod: webdav, label: 'WebDAV', icon: 'folder', blurb: 'Nextcloud, ownCloud, Synology, QNAP, kDrive, Koofr, rclone : adresse WebDAV ou lien de partage.' },
+  s3: { mod: s3, label: 'S3 et compatibles', icon: 'bucket', blurb: 'Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, Scaleway, OVHcloud, MinIO.' },
   http: { mod: http, label: 'NAS ou serveur', icon: 'server', blurb: 'Une adresse HTTPS qui liste tes fichiers : NAS, rclone, Nginx, Apache, Caddy.' },
   links: { mod: links, label: 'Liens et listes', icon: 'link', blurb: 'Des liens directs, Dropbox, OneDrive, une liste M3U ou un fichier JSON.' },
   demo: { mod: demo, label: 'Démo', icon: 'spark', blurb: 'Quatre courts métrages libres pour essayer sans rien configurer.' }
@@ -38,6 +48,8 @@ export function candidates(item) {
   var e = ext(item.name);
   var hard = HARD_EXT.indexOf(e) !== -1;
   var out = [];
+  var m = mod(src.type);
+  if (m && m.candidates) return m.candidates(src, item, { swActive: swActive(), hard: hard }).filter(Boolean);
 
   if (src.type === 'gdrive') {
     var native = { kind: 'native', url: gdrive.streamUrl(src, item), via: src.gdrive.mode === 'oauth' ? 'sw' : 'direct' };
@@ -77,6 +89,8 @@ export function candidates(item) {
 export function fetchSub(item, sub) {
   var src = getSource(item.src);
   if (!src) return Promise.reject(new Error('Source introuvable.'));
+  var m = mod(src.type);
+  if (m && m.fetchSub) return m.fetchSub(src, sub, item);
   if (sub.url && src.type !== 'gdrive') return fetch(sub.url).then(function (r) { if (!r.ok) throw new Error('Sous-titres indisponibles.'); return r.arrayBuffer(); });
   if (src.type === 'gdrive') return gdrive.fetchText(src, sub.fid);
   if (src.type === 'mega') return mega.fetchText(src, sub.fid);

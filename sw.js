@@ -2,7 +2,7 @@
    1. Hors ligne : l'interface est mise en cache (installable comme une appli).
    2. Lecture : /__stream/… sert les vidéos MEGA (déchiffrées à la volée, par plages) et Google Drive en mode privé
       (ajout du jeton de connexion), pour que la balise <video> puisse avancer et reculer librement. */
-var VERSION = 'vision-v2';
+var VERSION = 'vision-v3';
 var SHELL = [
   './', './index.html', './manifest.webmanifest',
   './css/base.css', './css/app.css', './css/player.css', './css/tv.css',
@@ -11,7 +11,7 @@ var SHELL = [
   './vendor/anime.umd.min.js', './vendor/qrcode.esm.js', './vendor/mega.umd.js',
   './js/main.js', './js/core/util.js', './js/core/idb.js', './js/core/store.js', './js/core/device.js', './js/core/nav.js', './js/core/router.js', './js/core/pair.js',
   './js/library/parse.js', './js/library/library.js', './js/library/scan.js', './js/library/meta.js',
-  './js/providers/index.js', './js/providers/gdrive.js', './js/providers/mega.js', './js/providers/http.js', './js/providers/links.js', './js/providers/demo.js',
+  './js/providers/index.js', './js/providers/gdrive.js', './js/providers/mega.js', './js/providers/http.js', './js/providers/links.js', './js/providers/demo.js', './js/providers/oauth.js', './js/providers/webdav.js', './js/providers/s3.js', './js/providers/dropbox.js', './js/providers/onedrive.js', './js/providers/pcloud.js',
   './js/ui/components.js', './js/ui/fx.js', './js/ui/overlay.js',
   './js/ui/views/home.js', './js/ui/views/category.js', './js/ui/views/detail.js', './js/ui/views/search.js', './js/ui/views/sources.js', './js/ui/views/settings.js', './js/ui/views/pair.js',
   './js/player/player.js', './js/player/subs.js',
@@ -99,6 +99,7 @@ function stream(req, url, rest) {
   var range = parseRange(req.headers.get('range'));
   if (kind === 'gd') return drive(src, fid, size, name, range);
   if (kind === 'mega' || kind === 'megalink') return megaStream(kind, src, fid, name, range);
+  if (kind === 'dav') return dav(req, src, url.searchParams.get('u') || '', name);
   return Promise.resolve(new Response('Flux inconnu', { status: 404 }));
 }
 
@@ -125,6 +126,24 @@ function drive(src, fid, size, name, range) {
       var cl = r.headers.get('content-length') || (size ? String(size) : '');
       if (cl) h['Content-Length'] = cl;
       return new Response(r.body, { status: 200, headers: h });
+    });
+  }).catch(function (e) { return new Response(String(e && e.message || e), { status: 502 }); });
+}
+
+/* WebDAV avec identifiant : on relaie la requête (plage comprise) en ajoutant l'authentification,
+   uniquement vers l'adresse de la source enregistrée. */
+function dav(req, src, target, name) {
+  return idbGet('dav:' + src).then(function (c) {
+    if (!c || !c.base || target.indexOf(c.base) !== 0) return new Response('Adresse WebDAV inconnue : resynchronise la source.', { status: 403 });
+    var headers = {};
+    if (c.auth) headers.Authorization = c.auth;
+    var rg = req.headers.get('range');
+    if (rg) headers.Range = rg;
+    return fetch(target, { headers: headers }).then(function (r) {
+      if (!r.ok) return new Response('WebDAV : ' + r.status, { status: r.status });
+      var h = { 'Content-Type': r.headers.get('content-type') || mime(name), 'Accept-Ranges': 'bytes' };
+      ['content-length', 'content-range'].forEach(function (k) { var v = r.headers.get(k); if (v) h[k] = v; });
+      return new Response(r.body, { status: r.status, statusText: r.statusText, headers: h });
     });
   }).catch(function (e) { return new Response(String(e && e.message || e), { status: 502 }); });
 }

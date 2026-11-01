@@ -199,16 +199,39 @@ function next(i) {
   S.video.playbackRate = +state.settings.rate || 1;
   S.video.disableRemotePlayback = c.via === 'sw';
   spinner(true);
+  updateSwitch();
+  if (c.resolve && !c.resolved) {
+    // Lien temporaire (Dropbox, OneDrive, pCloud, S3) : demandé au moment de la lecture.
+    var seq = S.seq = (S.seq || 0) + 1;
+    c.resolve().then(function (u) {
+      if (!S.opened || S.seq !== seq || S.cands[S.ci] !== c) return;
+      c.resolved = u;
+      c.at = Date.now();
+      startNative(c);
+    }, function (e) {
+      if (!S.opened || S.seq !== seq || S.cands[S.ci] !== c) return;
+      spinner(false);
+      var src = getSource(S.item.src);
+      if (e && e.code === 'AUTH') return showMsg('Connexion requise', e.message, [{ label: 'Mes stockages', primary: true, href: '#/sources' }, { label: 'Fermer', fn: close }]);
+      toast((src ? src.name + ' : ' : '') + (e && e.message || e), { type: 'error', timeout: 8000 });
+      fallback(0);
+    });
+    return;
+  }
+  startNative(c);
+}
+
+function startNative(c) {
+  var url = c.resolved || c.url;
   if (c.kind === 'hls' && !S.video.canPlayType('application/vnd.apple.mpegurl')) {
-    loadHls(c.url);
+    loadHls(url);
   } else {
-    S.video.src = c.url;
+    S.video.src = url;
   }
   var pr = S.video.play();
   if (pr && pr.catch) pr.catch(function (err) {
     if (err && err.name === 'NotAllowedError') { spinner(false); S.el.classList.add('need-tap'); showUI('.pl-bigplay'); }
   });
-  updateSwitch();
   loadSideSubs();
   updateFeatures();
 }
@@ -257,6 +280,14 @@ function onError() {
   if (!S.opened || S.mode !== 'native') return;
   var err = S.video.error, code = err ? err.code : 0, c = S.cands[S.ci] || {};
   if (!S.video.getAttribute('src') && !S.hls) return;
+  if (c.resolve && c.resolved && !c.retried && Date.now() - c.at > 60000) {
+    // Le lien temporaire a sans doute expiré pendant la lecture : on en redemande un et on reprend au même endroit.
+    c.retried = true;
+    c.resolved = null;
+    S.startAt = S.video.currentTime || S.startAt;
+    next(S.ci);
+    return;
+  }
   if (c.via === 'sw') {
     // Le service worker renvoie 401 quand la connexion Google a expiré.
     fetch(c.url, { headers: { Range: 'bytes=0-1' } }).then(function (r) {

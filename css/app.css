@@ -423,6 +423,9 @@ html[data-anim="full"] .beam { animation: beam 10s ease-in-out infinite alternat
 .steps { margin: 0; padding: 0 18px 16px 40px; color: var(--brume); line-height: 1.55; }
 .steps li { margin-top: 8px; }
 .steps li::marker { color: var(--ambre); font-weight: 800; }
+.other-clouds { margin: 0 var(--pad) 40px; }
+.other-clouds .steps { padding: 0 0 0 22px; overflow-wrap: anywhere; }
+html[data-layout="bar"] .other-clouds { margin: 0 16px 32px; }
 .guide.is-open .acc-body { grid-template-rows: 1fr; }
 .toggle { display: flex; align-items: center; gap: 14px; padding: 8px 0; cursor: pointer; font-weight: 600; }
 .toggle small { display: block; color: var(--brume-2); font-weight: 400; font-size: .82rem; margin-top: 2px; }

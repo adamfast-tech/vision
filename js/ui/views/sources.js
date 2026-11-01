@@ -4,6 +4,8 @@ import { state, getSource, upsertSource, removeSource, patchSource } from '../..
 import { PROVIDERS, mod, sourceLabel } from '../../providers/index.js';
 import * as gdrive from '../../providers/gdrive.js';
 import * as mega from '../../providers/mega.js';
+import * as webdav from '../../providers/webdav.js';
+import { openPopup, redirectUri } from '../../providers/oauth.js';
 import { scanSource, isScanning } from '../../library/scan.js';
 import { build } from '../../library/library.js';
 import { icon } from '../components.js';
@@ -39,7 +41,9 @@ function listView() {
     </section>
     <div class="src-list" data-brio-cascade="fondu-haut" data-pas="60" data-declencheur="charge">${state.sources.map(function (s) {
       var p = PROVIDERS[s.type] || {};
-      var needAuth = s.type === 'gdrive' && s.gdrive && s.gdrive.mode === 'oauth' && !gdrive.tokenValid(s.id);
+      var m = mod(s.type) || {};
+      var needAuth = s.type === 'gdrive' ? s.gdrive && s.gdrive.mode === 'oauth' && !gdrive.tokenValid(s.id) : !!(m.needsAuth && m.needsAuth(s));
+      var authLabel = s.type === 'gdrive' ? 'Se connecter à Google' : m.LOGIN_LABEL;
       return html`<article class="src-card" data-id="${s.id}">
         <div class="src-ic">${icon(p.icon || 'cloud')}</div>
         <div class="src-main">
@@ -48,7 +52,7 @@ function listView() {
           ${s.error ? html`<p class="src-err">${icon('info')}<span>${s.error}</span></p>` : ''}
         </div>
         <div class="src-actions">
-          ${needAuth ? html`<button type="button" class="btn btn-primary btn-sm" data-act="auth">${icon('lock')}<span>Se connecter à Google</span></button>` : ''}
+          ${needAuth ? html`<button type="button" class="btn btn-primary btn-sm" data-act="auth">${icon('lock')}<span>${authLabel}</span></button>` : ''}
           <button type="button" class="btn-sync" data-nx="recharger" data-act="scan">Synchroniser</button>
           ${s.type !== 'demo' ? html`<a class="btn btn-ghost btn-sm" href="#/sources/modifier/${s.id}">Modifier</a>` : ''}
           <button type="button" class="btn-del" data-nx="maintien" data-duree="1100" data-succes="Supprimé" data-reset="0" data-act="remove">Maintenir pour supprimer</button>
@@ -67,7 +71,16 @@ function chooser() {
         <span class="type-name">${p.label}${k === 'gdrive' ? html` <em class="tag">conseillé</em>` : ''}</span>
         <span class="type-blurb">${p.blurb}</span>
       </a>`;
-    })}</div>`;
+    })}</div>
+    <section class="set-card other-clouds"><h2 class="section-title">iCloud, Proton Drive, Box, Amazon…</h2>
+      <p class="muted small">Ces services ne laissent pas un site web lire tes fichiers : il n’existe pas d’accès direct depuis un navigateur. La passerelle gratuite rclone (sur un Mac, un PC ou un NAS allumé) les rend lisibles par Vision.</p>
+      <ol class="steps">
+        <li>Installe rclone (rclone.org) et ajoute ton cloud : rclone config (iCloud : type « iclouddrive » ; Proton : « protondrive » ; Box : « box »).</li>
+        <li>Partage-le en WebDAV : rclone serve webdav moncloud: --addr :8080 --allow-origin "${ORIGIN}" --user moi --pass motdepasse</li>
+        <li>Rends-le accessible en HTTPS (Tailscale Funnel, Cloudflare Tunnel ou le proxy de ton NAS), puis ajoute l’adresse dans WebDAV.</li>
+      </ol>
+      <div class="row-actions"><a class="btn btn-ghost btn-sm" href="#/sources/ajouter/webdav">${icon('folder')}<span>Ajouter une adresse WebDAV</span></a></div>
+    </section>`;
 }
 
 function seg(name, opts, value) {
@@ -150,10 +163,63 @@ function form(type, src) {
         'Dropbox (lien de partage), OneDrive (lien de partage, expérimental), Google Drive (fichier partagé), MEGA (lien de fichier).',
         'JSON : [{"title":"…","url":"…","group":"Films","show":"…","season":1,"episode":2,"poster":"…"}].'
       ], true)}`;
+  } else if (type === 'dropbox') {
+    var d = src.dropbox || {};
+    body = html`${field('dbxKey', 'Clé de l’appli Dropbox (App key)', d.appKey, { hint: 'Une suite de 15 lettres et chiffres, page « Settings » de ton appli Dropbox.' })}
+      ${field('dbxFolder', 'Dossier (chemin)', d.folder, { hint: 'Exemple : /Vidéos. Vide = tout le Dropbox (ou tout le dossier de l’appli).' })}
+      ${guide('Créer l’appli Dropbox (3 minutes, gratuit)', [
+        'Ouvre dropbox.com/developers/apps › Create app › Scoped access › Full Dropbox (ou App folder pour limiter l’accès à un seul dossier) › nom libre.',
+        'Onglet Permissions : coche files.metadata.read et files.content.read › Submit.',
+        'Onglet Settings › OAuth 2 › Redirect URIs : ajoute ' + redirectUri() + ' › Add. Laisse « Allow public clients » sur Allow.',
+        'Copie l’App key ici. Aucun secret n’est demandé : la connexion se fait dans une fenêtre Dropbox, puis Vision garde un jeton d’accès en lecture seule.',
+        'La connexion suit la configuration quand tu l’envoies à la télé (Réglages › Appareils).'
+      ], !editing)}`;
+  } else if (type === 'onedrive') {
+    var od = src.onedrive || {};
+    body = html`${field('odClient', 'ID client de l’appli Microsoft', od.clientId, { hint: 'Format 00000000-0000-0000-0000-000000000000 (« ID d’application (client) »).' })}
+      ${field('odFolder', 'Dossier : chemin ou lien de partage', od.folder, { hint: 'Exemple : /Vidéos, ou https://1drv.ms/f/… Vide = tout le OneDrive.' })}
+      ${guide('Créer l’appli Microsoft (5 minutes, gratuit)', [
+        'Ouvre entra.microsoft.com (connecte-toi avec ton compte Microsoft) › Applications › Inscriptions d’applications › Nouvelle inscription.',
+        'Types de comptes : « Comptes dans un annuaire organisationnel et comptes Microsoft personnels ».',
+        'URI de redirection : plateforme « Application monopage (SPA) », adresse ' + redirectUri() + ' › Inscrire.',
+        'Copie l’« ID d’application (client) » ici. Aucun secret n’est demandé.',
+        'Microsoft limite la connexion d’un site à 24 h sans usage : au-delà, Vision te demandera de te reconnecter.'
+      ], !editing)}`;
+  } else if (type === 'pcloud') {
+    body = html`${field('pcUrl', 'Lien public pCloud', (src.pcloud || {}).url, { type: 'url', hint: 'Exemple : https://u.pcloud.link/publink/show?code=XZ…' })}
+      ${guide('Créer le lien', [
+        'Sur pcloud.com, clic droit sur le dossier › Partager › Lien de téléchargement › Créer, puis copie le lien.',
+        'Pas de mot de passe sur le lien : Vision ne peut pas le saisir.',
+        'Avec un compte gratuit, le transfert des liens publics est limité chaque jour par pCloud.'
+      ], true)}`;
+  } else if (type === 'webdav') {
+    var w = src.webdav || {};
+    body = html`${field('davUrl', 'Adresse WebDAV ou lien de partage', w.url, { type: 'url', hint: 'Exemples : https://cloud.exemple.fr/s/AbC123 (partage Nextcloud), https://cloud.exemple.fr/remote.php/dav/files/moi/Vidéos/' })}
+      ${field('davUser', 'Identifiant (facultatif)', w.user)}
+      ${field('davPass', 'Mot de passe (ou mot de passe du partage)', w.pass, { secret: true, hint: 'Nextcloud : crée un mot de passe d’application (Paramètres › Sécurité).' })}
+      ${guide('Adresses selon le service', [
+        'Nextcloud, ownCloud : lien de partage public (…/s/…), ou https://serveur/remote.php/dav/files/IDENTIFIANT/Dossier/ avec un mot de passe d’application.',
+        'Synology : paquet « WebDAV Server », port HTTPS 5006. QNAP : WebDAV dans le serveur web. kDrive, Koofr : adresse WebDAV indiquée dans leurs réglages.',
+        'Le serveur doit autoriser ce site (CORS) : origine ' + ORIGIN + ', méthodes GET, PROPFIND, OPTIONS, en-têtes Authorization, Depth, Range, Content-Type. Sinon, place-le derrière rclone : rclone serve webdav distant: --allow-origin "' + ORIGIN + '".',
+        'Avec un identifiant, la lecture passe par Vision dans ce navigateur (la diffusion Chromecast est alors indisponible).'
+      ], true)}`;
+  } else if (type === 's3') {
+    var b = src.s3 || {};
+    body = html`${field('s3Endpoint', 'Adresse du service (vide pour Amazon S3)', b.endpoint, { type: 'url', hint: 'R2 : https://ID.r2.cloudflarestorage.com · B2 : https://s3.eu-central-003.backblazeb2.com · Wasabi : https://s3.eu-central-1.wasabisys.com' })}
+      ${field('s3Bucket', 'Compartiment (bucket)', b.bucket)}
+      ${field('s3Region', 'Région (facultatif)', b.region, { hint: 'Déduite de l’adresse. Amazon : eu-west-3 pour Paris. R2 : auto.' })}
+      ${field('s3Prefix', 'Dossier dans le compartiment (facultatif)', b.prefix, { hint: 'Exemple : videos/' })}
+      ${field('s3Key', 'Clé d’accès (Access key ID)', b.key, { hint: 'Vide pour un compartiment public.' })}
+      ${field('s3Secret', 'Clé secrète', b.secret, { secret: true })}
+      ${guide('Préparer le compartiment', [
+        'Crée une clé en lecture seule limitée à ce compartiment (lister et lire). Elle reste dans ce navigateur.',
+        'Ajoute une règle CORS au compartiment : [{"AllowedOrigins":["' + ORIGIN + '"],"AllowedMethods":["GET","HEAD"],"AllowedHeaders":["*"],"ExposeHeaders":["Content-Length","Content-Range","ETag"]}]',
+        'Lecture : liens signés valables 6 h, lus directement par l’appareil (Chromecast et AirPlay compris).'
+      ], true)}`;
   } else if (type === 'demo') {
     body = html`<p class="muted">Quatre courts métrages libres de la Blender Foundation (licence CC BY), pour voir l’interface et le lecteur. Tu pourras retirer la démo ensuite.</p>`;
   }
-  var defName = { gdrive: 'Mon Drive', mega: 'Mon MEGA', http: 'Mon NAS', links: 'Mes liens', demo: 'Démo' }[type];
+  var defName = { gdrive: 'Mon Drive', mega: 'Mon MEGA', http: 'Mon NAS', links: 'Mes liens', demo: 'Démo', dropbox: 'Mon Dropbox', onedrive: 'Mon OneDrive', pcloud: 'Mon pCloud', webdav: 'Mon cloud', s3: 'Mon stockage S3' }[type];
   return html`<section class="page-head"><a class="back-link" href="${editing ? '#/sources' : '#/sources/ajouter'}">${icon('back')}<span>${editing ? 'Mes stockages' : 'Changer de type'}</span></a>
       <h1 class="page-title">${editing ? 'Modifier « ' + src.name + ' »' : p.label}</h1></section>
     <form class="src-form" data-src-type="${type}" data-id="${src.id}" novalidate>
@@ -162,7 +228,7 @@ function form(type, src) {
       ${body}
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
-        <button type="submit" class="btn-submit" data-nx="soumettre" data-succes="Ajouté" data-erreur="Échec" data-autofocus>${editing ? 'Enregistrer et synchroniser' : (type === 'gdrive' && g.mode === 'oauth' ? 'Se connecter et ajouter' : (type === 'demo' ? 'Ajouter la démo' : 'Tester et ajouter'))}</button>
+        <button type="submit" class="btn-submit" data-nx="soumettre" data-succes="Ajouté" data-erreur="Échec" data-autofocus>${editing ? 'Enregistrer et synchroniser' : ((type === 'gdrive' && g.mode === 'oauth') || type === 'dropbox' || type === 'onedrive' ? 'Se connecter et ajouter' : (type === 'demo' ? 'Ajouter la démo' : 'Tester et ajouter'))}</button>
         <a class="btn btn-ghost" href="#/sources">Annuler</a>
       </div>
     </form>`;
@@ -179,6 +245,17 @@ function readForm(f) {
   if (type === 'mega') src.mega = { url: v('megaUrl') };
   if (type === 'http') src.http = { url: v('httpUrl') };
   if (type === 'links') src.links = { text: (f.querySelector('#linksText') || {}).value || '' };
+  if (type === 'dropbox') {
+    var pd = (prev && prev.dropbox) || {};
+    src.dropbox = { appKey: v('dbxKey'), folder: v('dbxFolder'), refresh: pd.appKey === v('dbxKey') ? pd.refresh || '' : '' };
+  }
+  if (type === 'onedrive') {
+    var po = (prev && prev.onedrive) || {};
+    src.onedrive = { clientId: v('odClient'), folder: v('odFolder'), refresh: po.clientId === v('odClient') ? po.refresh || '' : '' };
+  }
+  if (type === 'pcloud') src.pcloud = { url: v('pcUrl') };
+  if (type === 'webdav') src.webdav = { url: v('davUrl'), user: v('davUser'), pass: (f.querySelector('[name="davPass"]') || {}).value || '' };
+  if (type === 's3') src.s3 = { endpoint: v('s3Endpoint'), bucket: v('s3Bucket'), region: v('s3Region'), prefix: v('s3Prefix'), key: v('s3Key'), secret: v('s3Secret') };
   if (type === 'demo') { src.name = 'Démo'; src.category = 'auto'; }
   return src;
 }
@@ -190,9 +267,13 @@ function onSubmit(f) {
   err.hidden = true;
   noctisState(btn, 'chargement');
   btn.disabled = true;
-  var auth = src.type === 'gdrive' && src.gdrive.mode === 'oauth' && !gdrive.tokenValid(src.id) ? gdrive.signIn(src) : Promise.resolve();
-  auth.then(function () { return mod(src.type).test(src); }).then(function () {
+  var m = mod(src.type);
+  var auth = Promise.resolve();
+  if (src.type === 'gdrive' && src.gdrive.mode === 'oauth' && !gdrive.tokenValid(src.id)) auth = gdrive.signIn(src);
+  else if (m.needsAuth && m.needsAuth(src)) auth = m.signIn(src, openPopup()); // fenêtre ouverte pendant le clic
+  auth.then(function () { return m.test(src); }).then(function () {
     if (src.type === 'mega') return mega.register(src);
+    if (src.type === 'webdav') return webdav.register(src);
   }).then(function () {
     upsertSource(src);
     noctisState(btn, 'succes');
@@ -260,7 +341,8 @@ export default {
           function (er) { noctisState(a, 'erreur'); toast(er.message, { type: 'error', timeout: 9000 }); })
           .then(function () { setTimeout(function () { noctisState(a, 'repos'); }, 1400); });
       } else if (act === 'auth' && id) {
-        gdrive.signIn(getSource(id)).then(function () { patchSource(id, { error: '' }); return scanSource(id); }).then(function () { toast('Connecté à Google.', { type: 'ok' }); }, function (er) { toast(er.message, { type: 'error' }); });
+        var s = getSource(id), pm = mod(s.type);
+        (s.type === 'gdrive' ? gdrive.signIn(s) : pm.signIn(s, openPopup())).then(function () { patchSource(id, { error: '' }); return scanSource(id); }).then(function () { toast('Connecté.', { type: 'ok' }); router.go('/sources', { force: true, replace: true }); }, function (er) { toast(er.message, { type: 'error' }); });
       }
     });
     root.addEventListener('nx:confirm', function (e) {

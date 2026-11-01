@@ -9,6 +9,7 @@ import { scanAll, isScanning } from './library/scan.js';
 import { enrich } from './library/meta.js';
 import * as gdrive from './providers/gdrive.js';
 import * as mega from './providers/mega.js';
+import * as webdav from './providers/webdav.js';
 import { candidates } from './providers/index.js';
 import { markWatched } from './core/store.js';
 import * as player from './player/player.js';
@@ -289,6 +290,7 @@ function boot() {
     build();
     state.sources.forEach(function (s) {
       if (s.type === 'mega') mega.register(s);
+      if (s.type === 'webdav') webdav.register(s);
       if (s.type === 'gdrive' && s.gdrive && s.gdrive.mode === 'oauth') gdrive.loadToken(s.id);
     });
     router.start(onRoute);

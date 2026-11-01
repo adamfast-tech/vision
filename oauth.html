@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Vision : connexion</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #061014; color: #eaf3f2; font: 16px/1.5 system-ui, sans-serif; text-align: center; padding: 16px; box-sizing: border-box; }
+  p { max-width: 28rem; }
+  a { color: #f6b04a; }
+</style>
+</head>
+<body>
+<p id="msg">Connexion en cours…</p>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var data = { type: 'vision-oauth', code: q.get('code') || '', state: q.get('state') || '', error: q.get('error') || '', error_description: q.get('error_description') || '' };
+    try { if (window.opener) window.opener.postMessage(data, location.origin); } catch (e) { /* lien coupé */ }
+    try { var bc = new BroadcastChannel('vision-oauth'); bc.postMessage(data); bc.close(); } catch (e) { /* indisponible */ }
+    try { localStorage.setItem('vision-oauth', JSON.stringify(data)); } catch (e) { /* bloqué */ }
+    var msg = document.getElementById('msg');
+    msg.textContent = data.error ? 'Connexion refusée : ' + (data.error_description || data.error) : 'Connexion réussie. Tu peux fermer cette fenêtre et revenir à Vision.';
+    setTimeout(function () { try { window.close(); } catch (e) { /* ignoré */ } }, 400);
+  })();
+</script>
+</body>
+</html>

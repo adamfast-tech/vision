@@ -1,6 +1,6 @@
 # Vision
 
-Tes films, séries et animes rangés sur **Google Drive**, **MEGA**, un **NAS** ou de simples liens, lancés en un clic sur la **télé**, l’**ordinateur**, le **téléphone** et la **tablette**. Le principe de Jellyfin ou Plex, sans serveur : le site lit directement tes fichiers depuis ton stockage.
+Tes films, séries et animes rangés sur **Google Drive**, **MEGA**, **Dropbox**, **OneDrive**, **pCloud**, **WebDAV** (Nextcloud, Synology…), **S3** (R2, B2, Wasabi…), un **NAS** ou de simples liens, lancés en un clic sur la **télé**, l’**ordinateur**, le **téléphone** et la **tablette**. Le principe de Jellyfin ou Plex, sans serveur : le site lit directement tes fichiers depuis ton stockage.
 
 **En ligne : https://adamfast-tech.github.io/vision/**
 
@@ -46,6 +46,12 @@ Un sous-titre `Dark.S01E01.fr.srt` à côté de `Dark.S01E01.mkv` est trouvé et
 ## Autres stockages
 
 - **MEGA** : lien public de dossier ou de fichier, clé comprise (`https://mega.nz/folder/…#…`). Déchiffrement dans le navigateur (le service worker sert les vidéos par plages). Sans compte payant, MEGA limite le transfert.
+- **Dropbox** : ton Dropbox via une connexion (OAuth PKCE, clé d’appli publique créée sur dropbox.com/developers, redirection `oauth.html`). Lecture par lien temporaire Dropbox.
+- **OneDrive** : perso ou pro, chemin ou lien de dossier partagé, via une connexion Microsoft (ID client d’une appli « SPA » sur entra.microsoft.com, redirection `oauth.html`). Microsoft limite la connexion d’un site à 24 h sans usage.
+- **pCloud** : lien public de dossier, sans compte ni clé (serveurs US et Europe).
+- **WebDAV** : Nextcloud, ownCloud (lien de partage `…/s/…` converti), Synology, QNAP, kDrive, Koofr, `rclone serve webdav`. Avec identifiant, la lecture passe par le service worker. Le serveur doit autoriser ce site (CORS).
+- **S3 et compatibles** : Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, Scaleway, OVHcloud, MinIO. URL pré-signées (SigV4) dans le navigateur ; règle CORS sur le compartiment ; clé en lecture seule conseillée.
+- **iCloud, Proton Drive, Box…** : pas d’accès possible depuis un navigateur. Passer par rclone (`iclouddrive`, `protondrive`, `box`) puis `rclone serve webdav`, et l’ajouter en WebDAV.
 - **NAS ou serveur** : n’importe quelle adresse HTTPS qui liste des fichiers (Nginx/Apache autoindex, Caddy, rclone). Avec [rclone](https://rclone.org), tout cloud devient lisible :
   `rclone serve http moncloud:Videos --addr :8080 --allow-origin "https://adamfast-tech.github.io"`, derrière un accès HTTPS (Tailscale Funnel, Cloudflare Tunnel, reverse proxy du NAS).
 - **Liens et listes** : une vidéo par ligne (`Titre | https://…`), liste M3U, fichier JSON. Dropbox, OneDrive (expérimental), Google Drive et MEGA convertis automatiquement.
@@ -97,11 +103,12 @@ Télécommande : flèches pour se déplacer, **OK** pour lancer, **Retour** pour
 
 ```
 index.html            coque, icônes, écran d'ouverture
-sw.js                 service worker : hors ligne + flux MEGA / Drive privé
+sw.js                 service worker : hors ligne + flux MEGA / Drive privé / WebDAV authentifié
 css/                  base, app, player, tv
 js/core/              état, routes, navigation télécommande, appairage
 js/library/           analyse des noms, bibliothèque, synchronisation, affiches
-js/providers/         Google Drive, MEGA, NAS/HTTP, liens, démo
+js/providers/         Google Drive, MEGA, Dropbox, OneDrive, pCloud, WebDAV, S3, NAS/HTTP, liens, démo
+oauth.html            retour de connexion OAuth (Dropbox, Microsoft)
 js/ui/                composants, animations, vues
 js/player/            lecteur, sous-titres
 lib/                  Brio, Noctis et le kit d'animations
