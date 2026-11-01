@@ -498,7 +498,7 @@ html[data-anim="light"] .iris-veil { transition-duration: .3s; }
 
 /* ================= Téléphone et tablette en portrait ================= */
 html[data-layout="bar"] { --card-w: 44vw; --grid-min: 40vw; }
-html[data-layout="bar"] .hero { min-height: 74vh; padding: calc(var(--top-h) + 40px) 18px 70px; align-items: flex-end; }
+html[data-layout="bar"] .hero { min-height: 74vh; padding: calc(var(--top-h) + 40px) 18px 84px; align-items: flex-end; }
 html[data-layout="bar"] .hero-shade { background: linear-gradient(0deg, var(--nuit) 0%, rgba(6, 16, 20, .82) 30%, rgba(6, 16, 20, .15) 70%), linear-gradient(180deg, rgba(6, 16, 20, .6), rgba(6, 16, 20, 0) 30%); }
 html[data-layout="bar"] .hero-title { font-size: clamp(2.6rem, 10vw, 4rem); -webkit-line-clamp: 3; }
 html[data-layout="bar"] .hero-desc { -webkit-line-clamp: 2; font-size: .98rem; }
@@ -509,7 +509,7 @@ html[data-layout="bar"] .hero-shuffle { display: none; }
 html[data-layout="bar"] .seg { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
 html[data-layout="bar"] .seg::-webkit-scrollbar { display: none; }
 html[data-layout="bar"] .settings .seg { flex-wrap: wrap; }
-html[data-layout="bar"] .hero-dots { bottom: 74px; right: 18px; }
+html[data-layout="bar"] .hero-dots { bottom: 56px; left: 18px; right: auto; }
 html[data-layout="bar"] .rails { margin-top: -40px; }
 html[data-layout="bar"] .rail-track { padding: 12px 16px 16px; scroll-padding: 0 16px; }
 html[data-layout="bar"] .rail-track > .card-wrap { margin-right: 10px; }

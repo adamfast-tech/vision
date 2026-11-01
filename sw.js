@@ -2,7 +2,7 @@
    1. Hors ligne : l'interface est mise en cache (installable comme une appli).
    2. Lecture : /__stream/… sert les vidéos MEGA (déchiffrées à la volée, par plages) et Google Drive en mode privé
       (ajout du jeton de connexion), pour que la balise <video> puisse avancer et reculer librement. */
-var VERSION = 'vision-v3';
+var VERSION = 'vision-v4';
 var SHELL = [
   './', './index.html', './manifest.webmanifest',
   './css/base.css', './css/app.css', './css/player.css', './css/tv.css',
