@@ -50,7 +50,7 @@ function files(e) {
   var items = e.kind === 'movie' ? e.items : e.flat.map(function (x) { return x.item; });
   var srcs = Object.keys(e.srcs).map(getSource).filter(Boolean);
   var size = 0; items.forEach(function (it) { size += it.size || 0; });
-  return html`<p class="detail-files">${srcs.map(function (s) { return s.name + ' (' + sourceLabel(s) + ')'; }).join(', ')}${size ? html`, ${fmtSize(size)}` : ''}${e.kind === 'movie' ? html`<br><span class="mono-soft">${e.item.name}</span>` : ''}</p>`;
+  return html`<p class="detail-files">${srcs.map(function (s) { var l = sourceLabel(s); return s.name === l ? l : s.name + ' (' + l + ')'; }).join(', ')}${size ? html`, ${fmtSize(size)}` : ''}${e.kind === 'movie' ? html`<br><span class="mono-soft">${e.item.name}</span>` : ''}</p>`;
 }
 
 export default {

@@ -43,7 +43,10 @@ export function trackInput() {
   window.addEventListener('keydown', function (e) {
     if (/^(Arrow|Tab|Enter|Escape)/.test(e.key) || [37, 38, 39, 40, 13, 9, 10009, 461].indexOf(e.keyCode) !== -1) set('key');
   }, true);
-  window.addEventListener('mousemove', function (e) { if (e.movementX || e.movementY) set('pointer'); }, { passive: true });
-  window.addEventListener('mousedown', function () { set('pointer'); }, true);
-  window.addEventListener('touchstart', function () { set('touch'); }, { passive: true, capture: true });
+  // Après un appui, le navigateur simule des événements souris : on les ignore pendant un instant.
+  var lastTouch = 0;
+  function mouse() { if (Date.now() - lastTouch > 1000) set('pointer'); }
+  window.addEventListener('mousemove', function (e) { if (e.movementX || e.movementY) mouse(); }, { passive: true });
+  window.addEventListener('mousedown', mouse, true);
+  window.addEventListener('touchstart', function () { lastTouch = Date.now(); set('touch'); }, { passive: true, capture: true });
 }
